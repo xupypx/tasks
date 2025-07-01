@@ -1,0 +1,42 @@
+<?php
+require_once __DIR__ . '/../bootstrap.php';
+
+use core\Router;
+use core\View;
+
+use App\Controllers\HomeController;
+use App\Controllers\TaskController;
+use App\Controllers\AuthController;
+use App\Controllers\UserController;
+
+$router = new Router();
+
+// Роуты
+$router->get('/', [HomeController::class, 'index']);
+$router->get('/dashboard', [HomeController::class, 'dashboard']);
+$router->get('/tasks', [TaskController::class, 'list']);
+$router->get('/tasks/create', [TaskController::class, 'create']);
+$router->post('/tasks/store', [TaskController::class, 'store']);
+
+// Маршрут для отображения задачи с успехом (с параметром id)
+$router->get('/tasks/success/{id}', [TaskController::class, 'success']);  // Параметр id
+
+// Маршрут для отображения всех задач или другого действия, если нужно
+$router->get('/tasks/success', [TaskController::class, 'list']);  // Здесь можно вывести список задач
+
+$router->get('/tasks/{id}', [TaskController::class, 'show']);
+$router->get('/login', [AuthController::class, 'loginForm']);
+$router->post('/login', [AuthController::class, 'login']);
+$router->get('/logout', [AuthController::class, 'logout']);
+$router->get('/register', [UserController::class, 'create']);
+$router->post('/register', [UserController::class, 'store']);
+
+// Роуты для редактирования задачи
+$router->get('/tasks/edit/{id}', [TaskController::class, 'edit']);
+$router->post('/tasks/update/{id}', [TaskController::class, 'update']);
+$router->post('/tasks/delete/{id}', [TaskController::class, 'delete']);
+
+
+$router->dispatch($_SERVER['REQUEST_URI']);
+
+

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Structure Visualizer</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1d4ed8;
+            --accent: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --comment: #64748b;
+        }
+        
+        body {
+            font-family: 'Fira Code', 'JetBrains Mono', monospace;
+            line-height: 1.5;
+            background-color: #f1f5f9;
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .tree-container {
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .tree {
+            font-size: 0.9rem;
+            white-space: pre;
+            margin: 0;
+            line-height: 1.7;
+            tab-size: 4;
+        }
+        
+        .dir {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .file {
+            color: var(--dark);
+        }
+        
+        .comment {
+            color: var(--comment);
+            font-style: italic;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        button {
+            background: var(--light);
+            border: 1px solid #cbd5e1;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-family: inherit;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e2e8f0;
+        }
+        
+        .copy-btn {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        .copy-btn:hover {
+            background: #0d9f6e;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+            }
+            .tree {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Project Structure
+            </h1>
+        </header>
+        <div class="tree-container">
+            <div class="controls">
+                <button onclick="copyStructure()" class="copy-btn">Копировать</button>
+                <button onclick="toggleComments()">Скрыть комментарии</button>
+            </div>
+            <pre class="tree" id="structure">
+/www                                                <span class="comment">#project-root</span>
+    ├── <span class="dir">App/</span>
+    │           ├── <span class="dir">Controllers/</span>
+    │           │       ├── <span class="dir">Api/</span>
+    │           │       │       └── <span class="file">TaskApiController.php</span>
+    │           │       │
+    │           │       ├── <span class="file">AuthController.php</span>
+    │           │       ├── <span class="file">HomeController.php</span>
+    │           │       ├── <span class="file">TaskController.php</span>
+    │           │       └── <span class="file">UserController.php</span>
+    │           │
+    │           ├── <span class="dir">Models/</span>
+    │           │       └── <span class="file">Task.php</span>
+    │           │
+    │           └── <span class="dir">Views/</span>
+    │                   ├── <span class="dir">auth/</span>
+    │                   │       ├── <span class="file">login.php</span>
+    │                   │       └── <span class="file">register.php</span>
+    │                   │
+    │                   ├── <span class="dir">home/</span>
+    │                   │           ├── <span class="file">dashboard.php</span>
+    │                   │           └── <span class="file">index.php</span>
+    │                   │
+    │                   ├── <span class="dir">layouts/</span>
+    │                   │           └── <span class="file">main.php</span>    <span class="comment"># Главный шаблон</span>
+    │                   │
+    │                   ├── <span class="dir">tasks/</span>
+    │                   │           ├── <span class="file">create.php</span>
+    │                   │           ├── <span class="file">edit.php</span>
+    │                   │           ├── <span class="file">list.php</span>
+    │                   │           ├── <span class="file">show.php</span>
+    │                   │           └── <span class="file">success.php</span>
+    │                   └── <span class="dir">user/</span>
+    │                               └── <span class="file">create.php</span>
+    │
+    ├── <span class="dir">config/</span>
+    │           ├── <span class="file">config.php</span>                      <span class="comment"># Общие настройки</span>
+    │           └── <span class="file">database.php</span>                    <span class="comment"># Настройки БД</span>
+    │
+    ├── <span class="dir">core/</span>
+    │           ├── <span class="file">Autoloader.php</span>                  <span class="comment"># PSR-4 автозагрузка</span>
+    │           ├── <span class="file">helpers.php</span>                     <span class="comment"># Утилиты и функции</span>
+    │           ├── <span class="file">Router.php</span>                      <span class="comment"># Роутинг</span>
+    │           └── <span class="file">View.php</span>
+    │
+    ├── <span class="dir">public/</span>                                     <span class="comment"># Веб-доступ только сюда</span>
+    │           ├── <span class="file">index.php</span>                       <span class="comment"># Единая точка входа с основными маршрутами</span>
+    │           └── <span class="file">.htaccess</span>                       <span class="comment"># Apache</span>
+    │
+    ├── <span class="dir">views/</span>
+    │           └── <span class="dir">tasks/</span>
+    │                   └── <span class="dir">tasks/</span>
+    │
+    ├── <span class="file">bootstrap.php</span>                               <span class="comment"># Инициализация</span>
+    └── <span class="file">.htaccess</span>                                   <span class="comment"># Apache (если нужен) пока не делал</span></pre>
+        </div>
+    </div>
+
+    <script>
+        function copyStructure() {
+            const structure = document.getElementById('structure');
+            const textToCopy = structure.textContent.replace(/\u00A0/g, ' '); // Заменяем неразрывные пробелы
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function toggleComments() {
+            const comments = document.querySelectorAll('.comment');
+            const btn = document.querySelector('.controls button:last-child');
+            
+            const isHidden = comments[0].style.display === 'none';
+            
+            comments.forEach(comment => {
+                comment.style.display = isHidden ? 'inline' : 'none';
+            });
+            
+            btn.textContent = isHidden ? 'Скрыть комментарии' : 'Показать комментарии';
+        }
+    </script>
+</body>
+</html>
