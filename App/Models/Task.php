@@ -26,7 +26,7 @@ class Task {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Метод для создания задачи (по аналогии)
+    // Метод для создания задачи
     public function create(array $data): int {
         // Создаём задачу без привязки менеджеров
         $stmt = $this->db->prepare("
@@ -127,4 +127,43 @@ public function getByUser(int $userId): array
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+
+public function createWithProject(array $data): int {
+    $this->db->beginTransaction();
+
+    try {
+        $stmt = $this->db->prepare("
+            INSERT INTO tasks
+            (title, description, status, project_id, created_by, manager_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $data['title'],
+            $data['description'],
+            $data['status'] ?? 'new',
+            $data['project_id'],
+            $data['created_by'],
+            $data['manager_id'] ?? null
+        ]);
+
+        $taskId = $this->db->lastInsertId();
+
+        // Привязка менеджеров если есть
+        if (!empty($data['managers'])) {
+            $this->assignManagers($taskId, $data['managers']);
+        }
+
+        $this->db->commit();
+        return $taskId;
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        throw $e;
+    }
+}
+
+public function getByProject(int $projectId): array {
+    return $this->getAll(['project_id' => $projectId]);
+}
+
+// Закрытие class Task
 }
