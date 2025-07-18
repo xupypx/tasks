@@ -133,6 +133,25 @@ public static function render(string $view, array $params = []): void
     self::renderLayout($layout);
 }
 
+public static function insert(string $view, array $data = [])
+{
+    $viewFile = BASE_PATH . '/App/Views/' . $view . '.php';
+
+    if (!file_exists($viewFile)) {
+        throw new \Exception("Partial view not found: $viewFile");
+    }
+
+    extract($data, EXTR_SKIP);
+    include $viewFile;
+}
+
+// Реализация View::component
+public static function component(string $name, array $params = []): void
+{
+    extract($params);
+    require BASE_PATH . '/App/Views/components/' . $name . '.php';
+}
+
 
 }
 
