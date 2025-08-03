@@ -1,0 +1,78 @@
+.task-card > a { text-decoration: none;}
+.task-card > .uk-card-default, .task-card > a > .uk-card-default {
+  --uk-inverse: dark;
+  background-color: #282828 !important;
+  color: var(--const-for-black);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* box-shadow: 0 5px 15px rgba(255, 255, 255, 0.5); */
+
+}
+
+.uk-button-default
+ {
+    background-color: transparent;
+    color: rgb(111 178 243);
+    border: 1px solid rgb(111 178 243);
+
+}
+
+div[id^="delete-confirm-"]>.uk-modal-dialog {
+  background: rgba(0, 0, 0, .6);
+}
+
+.task-card .uk-dropdown {
+  --uk-position-offset: 10px;
+  --uk-position-viewport-offset: 15px;
+  --uk-inverse: dark;
+  width: auto;
+  min-width: 200px;
+  padding: 10px;
+  background: #ee395b;
+  color: #f6f5f4;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, .15);
+}
+
+.task-card .uk-dropdown-nav>li>a {
+  color: #f9f9f9;
+}
+
+
+/* Адаптивные стили */
+@media (max-width: 960px) {
+  .uk-card-title {
+    font-size: 1.1rem;
+  }
+
+  .task-filter {
+    margin-top: 10px;
+  }
+}
+
+.task-card .uk-card, .task-card > a > .uk-card {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card .uk-card:hover,
+.task-card > a > .uk-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1200px) {
+  .uk-card-body {
+    padding: 20px;
+  }
+}
+
+.uk-light .uk-label {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.uk-light .uk-label:hover {
+  background-color: rgba(207, 0, 0, 0.509);
+  color: #fff;
+}
