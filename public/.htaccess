@@ -1,0 +1,275 @@
+<IfModule mod_rewrite.c>
+
+  RewriteEngine On
+
+
+  # 8A. Optionally (O) set a rewrite base if rewrites are not working properly on your server.
+  # -----------------------------------------------------------------------------------------------
+  # In addition, if your site directory starts with a "~" you will most likely have to use this.
+  # https://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewritebase
+
+  # Examples of RewriteBase (root and subdirectories):
+  # RewriteBase /
+  # RewriteBase /pw/
+  # RewriteBase /~user/
+
+
+  # 8B. Set an environment variable so the installer can detect that mod_rewrite is active.
+  # -----------------------------------------------------------------------------------------------
+  # Note that some web hosts don't support this. If you get a (500) error, try commenting out this
+  # SetEnv line below.
+
+  <IfModule mod_env.c>
+    SetEnv HTTP_MOD_REWRITE On
+  </IfModule>
+
+
+  # -----------------------------------------------------------------------------------------------
+  # 9. Optionally Force HTTPS (O)
+  # -----------------------------------------------------------------------------------------------
+  # Note that on some web hosts you may need to replace %{HTTPS} with %{ENV:HTTPS} in order
+  # for it to work (in sections 9A and 9D below). If on a load balancer or proxy setup, you will
+  # likely need to use 9B rather than 9A, and 9E rather than 9D.
+  # -----------------------------------------------------------------------------------------------
+
+  # 9A. To redirect HTTP requests to HTTPS, uncomment the lines below (also see note above):
+  # -----------------------------------------------------------------------------------------------
+   #RewriteCond %{HTTPS} !=on
+   #RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+   #RewriteCond %{HTTP_HOST} ^www.jyss.online [NC]
+   #RewriteRule ^(.*)$ https://jyss.online/$1 [R=301,L]
+
+  # 9B. If using load balancer/AWS or behind proxy, use the following rather than 9A above: (L)
+  # -----------------------------------------------------------------------------------------------
+   #RewriteCond %{HTTP:X-Forwarded-Proto} =http
+   #RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+
+  # 9C. If using cPanel AutoSSL or Let's Encrypt webroot you may need to MOVE one of the below
+  # lines after the first RewriteCond in 9A or 9B to allow certificate validation:
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+  # RewriteCond %{REQUEST_URI} !^/\.well-known/cpanel-dcv/[\w-]+$
+  # RewriteCond %{REQUEST_URI} !^/\.well-known/pki-validation/[A-F0-9]{32}\.txt(?:\ Comodo\ DCV)?$
+
+
+  # 9D. Store current scheme in a 'proto' environment variable for later use
+  # -----------------------------------------------------------------------------------------------
+  #RewriteCond %{HTTPS} =on
+  #RewriteRule ^ - [env=proto:https]
+  #RewriteCond %{HTTPS} !=on
+  #RewriteRule ^ - [env=proto:http]
+
+
+  # 9E. If using load balancer/AWS or behind proxy, use lines below rather than 9D: (L)
+  # -----------------------------------------------------------------------------------------------
+RewriteCond %{HTTP:X-Forwarded-Proto} =https
+RewriteRule ^ - [env=proto:https]
+RewriteCond %{HTTP:X-Forwarded-Proto} =http
+RewriteRule ^ - [env=proto:http]
+
+
+  # 9F. Tell web browsers to only allow access via HSTS: Strict-Transport-Security (O) (v301)
+  # -----------------------------------------------------------------------------------------------
+  # This forces client-side SSL redirection. Before enabling be absolutely certain you can
+  # always serve via HTTPS because it becomes non-revokable for the duration of your max-age.
+  # See link below for details and options (note 'max-age=31536000' is 1-year):
+  # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+
+  <IfModule mod_headers.c>
+    # Uncomment one (1) line below & adjust as needed to enable Strict-Transport-Security (HSTS):
+    # Header always set Strict-Transport-Security "max-age=31536000;"
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubdomains"
+    # Header always set Strict-Transport-Security "max-age=31536000; preload"
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  </IfModule>
+
+
+  # Section 10 intentionally omitted for future use
+
+  # -----------------------------------------------------------------------------------------------
+  # 11. Nuisance blocking/firewall
+  # -----------------------------------------------------------------------------------------------
+  # None of these are enabled by default, but are here for convenience when the need arises.
+  # Review and uncomment as needed. For more complete firewall (and more overhead), the 7G firewall
+  # (or latest version) is worth considering, see: https://perishablepress.com/7g-firewall/
+  # -----------------------------------------------------------------------------------------------
+
+  # 11A. Block via IP addresses
+  # -----------------------------------------------------------------------------------------------
+  # Note that IP addresses here are examples only and should be replaced with actual IPs.
+
+  # Block single IP address
+  # Deny from 111.222.333.444
+
+  # Block multiple IP addresses
+  # Deny from 111.222.333.444 44.33.22.11
+
+  # Block IP address ranges (999.88.*, 99.88.77.*, 1.2.3.*)
+  # Deny from 999.888 99.88.77 1.2.3
+
+  # 11B. Block via request URI (matches strings anywhere in request URL)
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{REQUEST_URI} (bad-word|wp-admin|wp-content) [NC]
+  # RewriteRule .* - [F,L]
+
+  # 11B. Block via user agent strings (matches strings anywhere in user-agent)
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{HTTP_USER_AGENT} (bad-bot|mean-bot) [NC]
+  # RewriteRule .* - [F,L]
+
+  # 11C. Block via remote hosts
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{REMOTE_HOST} (bad-host|annoying-host) [NC]
+  # RewriteRule .* - [F,L]
+
+  # 11D. Block via HTTP referrer (matches anywhere in referrer URL)
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{HTTP_REFERER} (bad-referrer|gross-referrer) [NC]
+  # RewriteRule .* - [F,L]
+
+  # 11E. Block unneeded request methods (only if you do not need them)
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{REQUEST_METHOD} ^(connect|debug|delete|move|put|trace|track) [NC]
+  # RewriteRule .* - [F,L]
+
+  # 11F. Limit file upload size from Apache (i.e. 10240000=10 MB, adjust as needed)
+  # -----------------------------------------------------------------------------------------------
+  # LimitRequestBody 10240000
+
+
+
+  # -----------------------------------------------------------------------------------------------
+  # 12. Access Restrictions: Keep web users out of dirs or files that begin with a period,
+  # but let services like Lets Encrypt use the webroot authentication method.
+  # -----------------------------------------------------------------------------------------------
+
+  RewriteRule "(^|/)\.(?!well-known)" - [F]
+
+
+  # -----------------------------------------------------------------------------------------------
+  # 13. Optional domain redirects (O)
+  #
+  # Redirect domain.com to www.domain.com redirect (or www to domain.com redirect).
+  # To use, uncomment either 13A, 13B or 13C. Do not use more than one of them. 13A and 13B
+  # redirect non-www hosts to www.domain.com, 13C redirects www.domain.com host to domain.com.
+  # -----------------------------------------------------------------------------------------------
+
+  # 13A. Redirect domain.com and *.domain.com to www.domain.com (see also 13B as alternate):
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{HTTP_HOST} !^www\. [NC]
+  # RewriteCond %{SERVER_ADDR} !=127.0.0.1
+  # RewriteCond %{SERVER_ADDR} !=::1
+  # RewriteRule ^ %{ENV:PROTO}://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 13B. Alternate www redirect if 13A does not work for your server:
+  # -----------------------------------------------------------------------------------------------
+  # RewriteCond %{HTTP_HOST} !^www\. [NC]
+  # RewriteRule ^ %{ENV:PROTO}://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 13C. Redirect www.domain.com to domain.com (do not combine with 13A or 13B):
+  # -----------------------------------------------------------------------------------------------
+   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+   RewriteRule ^ %{ENV:PROTO}://%1%{REQUEST_URI} [R=301,L]
+
+
+  # -----------------------------------------------------------------------------------------------
+  # 14. Optionally send URLs with non-ASCII name-format characters to 404 page (optimization).
+  #
+  # This ensures that ProcessWire does not spend time processing URLs that we know ahead of time
+  # are going to result in 404s. Uncomment lines below to enable. (O)
+  # -----------------------------------------------------------------------------------------------
+
+  # RewriteCond %{REQUEST_URI} "[^-_.a-zA-Z0-9/~]"
+  # RewriteCond %{REQUEST_FILENAME} !-f
+  # RewriteCond %{REQUEST_FILENAME} !-d
+  # RewriteRule ^(.*)$ index.php?it=/http404/ [L,QSA]
+
+
+  # -----------------------------------------------------------------------------------------------
+  # 15. Access Restrictions (v301)
+  # -----------------------------------------------------------------------------------------------
+
+  # 15A. Keep http requests out of specific files and directories
+  # -----------------------------------------------------------------------------------------------
+
+
+
+  # 15B. Block archive file types commonly used for backup purposes (O)
+  # -----------------------------------------------------------------------------------------------
+  # This blocks requests for zip, rar, tar, gz, and tgz files that are sometimes left on servers
+  # as backup files, and thus can be problematic for security. This rule blocks those files
+  # unless they are located within the /site/assets/files/ directory. This is not enabled by
+  # default since there are many legitimate use cases for these files, so uncomment the lines
+  # below if you want to enable this.
+
+  # RewriteCond %{REQUEST_URI} \.(zip|rar|tar|gz|tgz)$ [NC]
+  # RewriteCond %{REQUEST_URI} !(^|/)(site|site-[^/]+)/assets/files/\d+/ [NC]
+  # RewriteRule ^.*$ - [F,L]
+
+
+  # PW-PAGENAME
+  # -----------------------------------------------------------------------------------------------
+  # 16A. Ensure that the URL follows the name-format specification required by PW
+  # See also directive 16b below, you should choose and use either 16a or 16b.
+  # -----------------------------------------------------------------------------------------------
+
+  RewriteCond %{REQUEST_URI} "^/~?[-_.a-zA-Z0-9/]*$"
+
+  # -----------------------------------------------------------------------------------------------
+  # 16B. Alternative name-format specification for UTF8 page name support. (O)
+  # If used, comment out section 16a above and uncomment the directive below. If you have updated
+  # your $config->pageNameWhitelist make the characters below consistent with that.
+  # -----------------------------------------------------------------------------------------------
+
+  # RewriteCond %{REQUEST_URI} "^/~?[-_./a-zA-Z0-9æåäßöüđжхцчшщюяàáâèéëêěìíïîõòóôøùúûůñçčćďĺľńňŕřšťýžабвгдеёзийклмнопрстуфыэęąśłżź]*$"
+
+  # END-PW-PAGENAME
+  # -----------------------------------------------------------------------------------------------
+  # 17. If the request is for a file or directory that physically exists on the server,
+  # then don't give control to ProcessWire, and instead load the file
+  # -----------------------------------------------------------------------------------------------
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !(favicon\.ico|robots\.txt)
+
+  # -----------------------------------------------------------------------------------------------
+  # 18. Optionally (O) prevent PW from serving some file types, or anything in /site/assets/.
+  # Both of these lines are optional, but can help to reduce server load. However, they
+  # are not compatible with the $config->pagefileSecure option (if enabled) and they
+  # may produce an Apache 404 rather than your regular 404. You may uncomment the two lines
+  # below if you don't need to use the $config->pagefileSecure option. After uncommenting, test
+  # a URL like domain.com/site/assets/files/test.jpg to make sure you are getting a 404 and not
+  # your homepage. If getting your homepage, then either: do not use this option, or comment out
+  # section #2 above that makes ProcessWire the 404 handler.
+  # -----------------------------------------------------------------------------------------------
+
+  # RewriteCond %{REQUEST_URI} !\.(jpg|jpeg|gif|png|ico|webp|svg|js|css)$ [NC]
+  # RewriteCond %{REQUEST_FILENAME} !(^|/)site/assets/
+
+  # -----------------------------------------------------------------------------------------------
+  # 19. Pass control to ProcessWire if all the above directives allow us to this point.
+  # For regular VirtualHosts (most installs)
+  # -----------------------------------------------------------------------------------------------
+
+  RewriteRule ^(.*)$ index.php?it=$1 [L,QSA]
+
+  # -----------------------------------------------------------------------------------------------
+  # 20. If using VirtualDocumentRoot (500): comment out the one above and use this one instead
+  # -----------------------------------------------------------------------------------------------
+
+  # RewriteRule ^(.*)$ /index.php?it=$1 [L,QSA]
+
+</IfModule>
+# Редирект с www и/или http на https без www
+#RewriteCond %{HTTPS} off [OR]
+#RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+#RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “alt-php83” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-alt-php83___lsphp .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
