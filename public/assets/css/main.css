@@ -1,0 +1,236 @@
+:root,
+[data-bs-theme=light] {
+    --bg-color: rgba(255, 255, 255, 0.9);
+    --bg-color-login: rgba(255, 255, 255, 0.8);
+    --font-color: rgba(0, 0, 0, 0.9);
+    --bg-header: rgb(255, 255, 255);
+    --logo-color: rgb(96, 96, 96);
+    --button-color: #fff;
+    --const-for-black:rgb(172, 172, 172);
+    --bg-delete-confirm: rgba(255, 255, 255, 0.933);
+    --list-astriped:#dcdcdc;
+    --list-bstriped:#cfcfcf;
+    --primary-color: #1e87f0;
+}
+
+[data-bs-theme=dark] {
+    --bg-color: rgba(0, 0, 0, 0.9);
+    --bg-color-login: rgba(0, 0, 0, 0.8);
+    --font-color: rgba(255, 255, 255, 0.9);
+    --bg-header: rgb(0, 0, 0);
+    --logo-color: rgb(172, 172, 172);
+    --button-color: #fff;
+    --const-for-black:rgb(172, 172, 172);
+    --bg-delete-confirm: rgb(134, 32, 32);
+    --list-astriped: #3d3846;
+    --list-bstriped:#241f31;
+    --primary-color: #1e87f0;
+}
+
+html,
+body,
+main {
+    background: var(--bg-color);
+    color: var(--font-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.login main {
+    background: var(--bg-color-login);
+}
+
+header {
+    background: var(--bg-header);
+    color: var(--font-color);
+    border-bottom: 1px solid rgba(96, 96, 96, 0.24);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Headings
+ ========================================================================== */
+h1,
+.uk-h1,
+h2,
+.uk-h2,
+h3,
+.uk-h3,
+h4,
+.uk-h4,
+h5,
+.uk-h5,
+h6,
+.uk-h6,
+.uk-heading-small,
+.uk-heading-medium,
+.uk-heading-large,
+.uk-heading-xlarge,
+.uk-heading-2xlarge,
+.uk-heading-3xlarge {
+  margin: 0 0 20px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-weight: normal;
+  color: var(--font-color);
+  text-transform: none;
+}
+
+.uk-navbar-nav>li.uk-active>a,
+.uk-navbar-nav>li>a:focus,
+.uk-navbar-nav>li>a:hover {
+    color: var(--font-color);
+}
+
+.uk-logo {
+    color: var(--logo-color);
+    transition: 200ms ease-in-out;
+}
+
+.uk-logo:hover {
+    color: var(--font-color);
+}
+
+html,
+body {
+    /* height: 100%; */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+footer.uk-section-secondary {
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+.uk-card-default .uk-card-title {
+    color: var(--const-for-black);
+    font-size:1.4rem;
+}
+a.uk-link-heading:hover {
+  color: #fbfbfb;
+  text-decoration: none;
+}
+
+.uk-button-default {
+    background-color: transparent;
+    color: var(--font-color);
+    border: 1px solid var(--font-color);
+}
+
+.uk-button-default:hover {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.uk-button-text {
+    color: var(--primary-color);
+}
+
+.uk-button-text:hover {
+    color: var(--primary-color);
+}
+
+.uk-icon-button {
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    border-radius: 500px;
+    background: #f0506e;
+    color: #fff;
+    vertical-align: middle;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: .1s ease-in-out;
+    transition-property: all;
+    transition-property: color, background-color;
+}
+.uk-icon-button:hover {
+  background-color: #1e87f0;
+  color: #ffffff;
+}
+
+.uk-input,
+.uk-select,
+.uk-textarea {
+    max-width: 100%;
+    width: 100%;
+    border: 0 none;
+    padding: 0 10px;
+    padding-right: 10px;
+    background: rgba(255, 255, 255, 0.75);
+    color: #666;
+    border: 1px solid #b5b5b5;
+    transition: .2s ease-in-out;
+    transition-property: all;
+    transition-property: color, background-color, border;
+}
+
+.uk-checkbox,
+.uk-radio {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    overflow: hidden;
+    margin-top: -4px;
+    vertical-align: middle;
+    background-color: rgba(255, 255, 255, 0.75);
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    border: 1px solid #b5b5b5;
+    transition: .2s ease-in-out;
+    transition-property: all;
+    transition-property: background-color, border;
+}
+
+.uk-form-label {
+    color: var(--logo-color);
+    font-size: .875rem;
+}
+
+.uk-list-divider> :nth-child(n+2) {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--logo-color);
+}
+.uk-pagination > .uk-active > * {
+  color: var(--primary-color);
+}
+
+/* заглушки всякие */
+.uk-pagination-placeholder {
+    height: 100px;
+}
+/* /заглушки всякие */
+
+div[id^="delete-confirm-"]>.uk-modal-dialog {
+    /* Стили для элементов, ID которых начинается с "delete-confirm-" */
+    background-color: var(--bg-delete-confirm) !important;
+}
+
+/*
+ * Striped
+ */
+.uk-list-striped > * {
+  padding: 10px 10px;
+  background:var(--list-astriped);
+}
+.uk-list-striped > *:nth-of-type(odd) {
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+}
+.uk-list-striped > :nth-of-type(odd) {
+  background: var(--list-bstriped);
+}
+.uk-list-striped > :nth-child(n+2) {
+  margin-top: 0;
+}
+/* Size modifier
