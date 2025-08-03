@@ -1,19 +1,30 @@
 <?php
+
 namespace App\Controllers;
 
-use core\View;
-use PDO;
+use Core\View;
+use App\Services\AuthService;
 use function verify_csrf_token;
 
-class AuthController {
-    public function registerForm(): void {
+class AuthController
+{
+    protected AuthService $auth;
+
+    public function __construct()
+    {
+        $this->auth = new AuthService(db());
+    }
+
+    public function registerForm(): void
+    {
         View::render('auth/register', [
             'title' => 'Регистрация',
             'csrf_token' => $_SESSION['csrf_token'] ?? ''
         ]);
     }
 
-    public function register(): void {
+    public function register(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             exit('Метод не разрешён');
@@ -34,31 +45,27 @@ class AuthController {
             exit;
         }
 
-        global $db;
-        $stmt = $db->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        if ($stmt->fetch()) {
+        if ($this->auth->userExists($username)) {
             $_SESSION['error'] = 'Пользователь уже существует';
             header('Location: /register');
             exit;
         }
 
-        $hash = password_hash($password, PASSWORD_BCRYPT);
-        $db->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)")
-           ->execute([$username, $hash]);
-
+        $this->auth->createUser($username, $password);
         header('Location: /login');
         exit;
     }
 
-    public function loginForm(): void {
+    public function loginForm(): void
+    {
         View::render('auth/login', [
             'title' => 'Вход',
             'csrf_token' => $_SESSION['csrf_token'] ?? ''
         ]);
     }
 
-    public function login(): void {
+    public function login(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             exit('Метод не разрешён');
@@ -66,29 +73,26 @@ class AuthController {
 
         $token = $_POST['csrf_token'] ?? '';
         if (!verify_csrf_token($token)) {
-            http_response_code(403);
-            exit('Неверный CSRF токен');
+            // http_response_code(403);
+            // exit('Неверный CSRF токен');
+            flash('error', 'Неверный CSRF-токен. Пожалуйста, обновите страницу и попробуйте снова. Если проблема сохраняется, выйдите из системы и войдите заново.');
+            $this->redirectBack();
         }
 
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        global $db;
-        $stmt = $db->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
+        $result = $this->auth->attemptLogin($username, $password);
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
-            $_SESSION['error'] = 'Неверный логин или пароль';
-            header('Location: /login');
-            exit;
+        if (is_string($result)) {
+            // $_SESSION['error'] = $result;
+            // header('Location: /login');
+            // exit;
+            flash('error', $result);
+            $this->redirectBack();
         }
 
-        $_SESSION['user'] = [
-            'id' => $user['id'],
-            'username' => $user['username'],
-            'role' => $user['role'],
-        ];
+        $_SESSION['user'] = $result;
 
         $redirect = $_SESSION['redirect_url'] ?? '/dashboard';
         unset($_SESSION['redirect_url']);
@@ -96,9 +100,43 @@ class AuthController {
         exit;
     }
 
-    public function logout(): void {
-        session_destroy();
+    public function logout(): void
+    {
+        // Всегда запускаем сессию
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            View::render('auth/logout', [
+                'csrf_token' => $_SESSION['csrf_token'] ?? bin2hex(random_bytes(32)),
+                'title' => 'Подтверждение выхода'
+            ]);
+            return;
+        }
+
+        $token = $_POST['csrf_token'] ?? '';
+        if (!verify_csrf_token($token)) {
+            $_SESSION['error'] = 'Неверный CSRF токен';
+            header('Location: /dashboard');
+            exit;
+        }
+
+        // Используем AuthService для выхода
+        $this->auth->logout();
+
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
         header('Location: /login');
         exit;
     }
+/**
+* Редирект назад
+*/
+private function redirectBack(): void
+{
+header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/'));
+exit;
+}
 }
