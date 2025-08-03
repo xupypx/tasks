@@ -41,33 +41,33 @@ class Task extends Model
 
     public function create(array $data): int
     {
-        // Сначала создаем задачу
-        $stmt = $this->db->prepare("
-        INSERT INTO tasks (title, description, status, deadline, created_at, updated_at)
-        VALUES (:title, :description, :status, :deadline, NOW(), NOW())"
-    );
+    $stmt = $this->db->prepare("
+        INSERT INTO tasks (project_id, title, description, status, created_by, deadline, created_at, updated_at)
+        VALUES (:project_id, :title, :description, :status, :created_by, :deadline, NOW(), NOW())
+    ");
 
-        $stmt->execute([
-            ':project_id' => $data['project_id'],
-            ':title' => $data['title'],
-            ':description' => $data['description'],
-            ':status' => $data['status'],
-            ':created_by' => $data['created_by'],
-            ':deadline' => $data['deadline'] ?? null,
-        ]);
+    $stmt->execute([
+        'project_id' => $data['project_id'],
+        'title' => $data['title'],
+        'description' => $data['description'],
+        'status' => $data['status'],
+        'created_by' => $data['created_by'],
+        'deadline' => $data['deadline'] ?? null,
+    ]);
 
-        $taskId = (int) $this->db->lastInsertId();
+    $taskId = (int) $this->db->lastInsertId();
 
-        // Привязываем менеджеров, если они есть
-        if (isset($data['manager_ids']) && !empty($data['manager_ids'])) {
-            $this->assignManagers($taskId, $data['manager_ids']);
-        }
-
-        // Обрабатываем динамические поля (если они есть)
-        $this->handleDynamicFields($taskId, $data);
-
-        return $taskId;
+    // Привязываем менеджеров, если они есть
+    if (isset($data['manager_ids']) && !empty($data['manager_ids'])) {
+        $this->assignManagers($taskId, $data['manager_ids']);
     }
+
+    // Обрабатываем динамические поля (если они есть)
+    $this->handleDynamicFields($taskId, $data);
+
+    return $taskId;
+    }
+
 
     private function handleDynamicFields(int $taskId, array $data): void
     {
@@ -132,24 +132,25 @@ class Task extends Model
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
     }
-public function getAll(array $conditions = []): array
-{
-    $query = "SELECT * FROM tasks";
-    
-    // Если есть условия фильтрации
-    if ($conditions) {
-        $whereClauses = [];
-        $params = [];
-        
-        foreach ($conditions as $key => $value) {
-            $whereClauses[] = "{$key} = :{$key}";
-            $params[":{$key}"] = $value;
+
+    public function getAll(array $conditions = []): array
+    {
+        $query = "SELECT * FROM tasks";
+
+        // Если есть условия фильтрации
+        if ($conditions) {
+            $whereClauses = [];
+            $params = [];
+
+            foreach ($conditions as $key => $value) {
+                $whereClauses[] = "{$key} = :{$key}";
+                $params[":{$key}"] = $value;
+            }
+
+            if (!empty($whereClauses)) {
+                $query .= " WHERE " . implode(' AND ', $whereClauses);
+            }
         }
-        
-        if (!empty($whereClauses)) {
-            $query .= " WHERE " . implode(' AND ', $whereClauses);
-        }
-    }
     
     // Если есть параметры, используем prepare
     if ($conditions) {
@@ -304,14 +305,14 @@ public function deleteTaskWithRelations(int $taskId): bool
     }
 }
 
-    /**
-    * Вспомогательный метод для удаления связанных данных
-    */
-    private function deleteRelatedData(int $taskId, string $tableName, string $foreignKey): void
-    {
-        $stmt = $this->db->prepare("DELETE FROM {$tableName} WHERE {$foreignKey} = :taskId");
-        $stmt->execute([':taskId' => $taskId]);
-    }
+/**
+* Вспомогательный метод для удаления связанных данных
+*/
+private function deleteRelatedData(int $taskId, string $tableName, string $foreignKey): void
+{
+    $stmt = $this->db->prepare("DELETE FROM {$tableName} WHERE {$foreignKey} = :taskId");
+    $stmt->execute([':taskId' => $taskId]);
+}
 
 public function getAllWithProjects(): array
 {
@@ -451,5 +452,94 @@ public function countByUser(int $userId): int
     return (int)$stmt->fetchColumn();
 }
 
+    public function countAssignedToUser(int $userId): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM task_user WHERE user_id = :user_id");
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getAssignedToUserPaginated(int $userId, int $perPage, int $offset): array
+    {
+        $stmt = $this->db->prepare("SELECT t.* FROM tasks t JOIN task_user tu ON t.id = tu.task_id WHERE tu.user_id = :user_id ORDER BY t.created_at DESC LIMIT :limit OFFSET :offset");
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+public function getSolvedTasksByUser(int $userId, int $limit = 10, int $offset = 0): array
+{
+    $stmt = $this->db->prepare("
+        SELECT tasks.*
+        FROM task_user
+        JOIN tasks ON tasks.id = task_user.task_id
+        WHERE task_user.user_id = :user_id AND tasks.status = 'выполнена'
+        ORDER BY tasks.id DESC
+        LIMIT :limit OFFSET :offset
+    ");
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+
+public function countSolvedByUser(int $userId): int
+{
+    $stmt = $this->db->prepare("
+        SELECT COUNT(*)
+        FROM task_user
+        JOIN tasks ON tasks.id = task_user.task_id
+        WHERE task_user.user_id = :user_id AND tasks.status = 'выполнена'
+    ");
+    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->execute();
+
+    return (int)$stmt->fetchColumn();
+}
+
+
+/**
+ * Проверяет, может ли пользователь добавлять решение для задачи
+ *
+ * @param int $taskId ID задачи
+ * @param int $userId ID пользователя
+ * @return bool Возвращает true, если пользователь может добавлять решения
+ */
+public function canUserAddSolution(int $taskId, int $userId): bool
+{
+    $isManager = $this->isAssignedManager($taskId, $userId);
+    $stmt = $this->db->prepare("SELECT role FROM users WHERE id = :userId");
+    $stmt->execute([':userId' => $userId]);
+    $role = $stmt->fetchColumn();
+    return $isManager || $role === 'admin';
+}
+
+/**
+ * Проверяет, является ли пользователь назначенным менеджером задачи
+ *
+ * @param int $taskId ID задачи
+ * @param int $userId ID пользователя
+ * @return bool Возвращает true, если пользователь назначен менеджером
+ */
+public function isAssignedManager(int $taskId, int $userId): bool
+{
+    $stmt = $this->db->prepare("
+        SELECT COUNT(*)
+        FROM task_user tu
+        JOIN users u ON tu.user_id = u.id
+        WHERE tu.task_id = :task_id AND tu.user_id = :user_id AND u.role = 'manager'
+    ");
+    $stmt->execute([
+        ':task_id' => $taskId,
+        ':user_id' => $userId
+    ]);
+    return (int)$stmt->fetchColumn() > 0;
+}
 
 }
