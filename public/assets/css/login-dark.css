@@ -5,32 +5,95 @@ body.login {
 	background-repeat: no-repeat;
 	background-size: cover;
 }
-@media screen and (min-width: 640px){
+
+
+@media screen and (min-width: 640px) {
 	body.login {
 		background-image: url('../img/bg/login/1044-960x700.jpg');
 	}
-}	
-@media screen and (min-width: 960px){
+}
+
+@media screen and (min-width: 960px) {
 	body.login {
 		background-image: url('../img/bg/login/1044-1200x900.jpg');
 	}
-}	
-@media screen and (min-width: 1200px){
+}
+
+@media screen and (min-width: 1200px) {
 	body.login {
 		background-image: url('../img/bg/login/1044-1600x950.jpg');
 	}
-}	
-@media screen and (min-width: 1600px){
+}
+
+@media screen and (min-width: 1600px) {
 	body.login {
 		background-image: url('../img/bg/login/1044-2000x1050.jpg');
 	}
 }
+
 .uk-dropdown {
-  width: auto;
-  min-width: 240px;
-  padding: 5px 0;
+	width: auto;
+	min-width: 240px;
+	padding: 5px 0;
 }
+
 .uk-light .uk-button-primary {
-  background-color: #f9f06b;
-  color: #000000;
+	background-color: #f9f06b;
+	color: #000000;
+}
+
+/* Стили для форм логина и сброса пароля */
+.toggle-password,
+.toggle-password-confirm,
+.generate-password,
+.copy-password,
+.copy-password-confirm {
+    pointer-events: auto;
+    text-decoration: none;
+    z-index: 10;
+    color: var(--primary-color); /* Для видимости на тёмной теме */
+}
+
+.toggle-password,
+.toggle-password-confirm {
+    right: 30px;
+}
+
+.generate-password {
+    right: 60px;
+}
+
+.copy-password,
+.copy-password-confirm {
+    right: 90px;
+}
+
+.copy-password[data-uk-icon="icon: check"],
+.copy-password-confirm[data-uk-icon="icon: check"] {
+    color: #00cc00; /* Зелёный цвет для иконки check */
+}
+
+.password-strength-weak {
+    color: #ff4d4d;
+}
+
+.password-strength-medium {
+    color: #ffaa00;
+}
+
+.password-strength-strong {
+    color: #00cc00;
+}
+
+.uk-form-icon:hover,
+.uk-form-icon:focus {
+    transform: scale(1.2);
+    transition: transform 0.2s ease-in-out;
+}
+
+.uk-alert {
+    max-width: 300px;
+    margin: 10px auto;
+    text-align: center;
+    z-index: 1000; /* Уведомления поверх всего */
 }
